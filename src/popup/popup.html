@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,34 +8,54 @@
   </head>
   <body>
     <main class="popup">
-      <header>
-        <div>
-          <h1>AutoProxy</h1>
-          <p id="statusText">Loading</p>
+      <div class="signal-grid" aria-hidden="true"></div>
+
+      <header class="masthead">
+        <div class="brand-lockup">
+          <span class="status-dot"></span>
+          <div>
+            <p class="eyebrow">路由控制台</p>
+            <h1>AutoProxy</h1>
+          </div>
         </div>
-        <label class="switch">
-          <input id="enabledToggle" type="checkbox" aria-label="Enable proxy">
-          <span></span>
+        <label class="switch" title="启用代理控制">
+          <input id="enabledToggle" type="checkbox" aria-label="启用代理">
+          <span aria-hidden="true"></span>
         </label>
       </header>
 
+      <section class="status-panel" aria-live="polite">
+        <span class="panel-label">系统状态</span>
+        <p id="statusText">正在加载</p>
+      </section>
+
       <section class="field">
-        <label for="proxySelect">Proxy profile</label>
-        <select id="proxySelect"></select>
+        <div class="field-label">
+          <label for="proxySelect">代理配置</label>
+          <span>当前路由</span>
+        </div>
+        <div class="select-wrap">
+          <select id="proxySelect"></select>
+        </div>
       </section>
 
-      <section class="summary">
-        <div>
+      <section class="summary" aria-label="配置摘要">
+        <div class="metric">
+          <span class="metric-mark"></span>
           <strong id="proxyCount">0</strong>
-          <span>profiles</span>
+          <span>配置</span>
         </div>
-        <div>
+        <div class="metric">
+          <span class="metric-mark"></span>
           <strong id="ruleCount">0</strong>
-          <span>rules</span>
+          <span>规则</span>
         </div>
       </section>
 
-      <button id="openOptions" type="button">Open settings</button>
+      <button id="openOptions" type="button">
+        <span>打开设置</span>
+        <span aria-hidden="true">-></span>
+      </button>
     </main>
     <script type="module" src="popup.js"></script>
   </body>

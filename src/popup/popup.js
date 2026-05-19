@@ -33,7 +33,7 @@ openOptions.addEventListener("click", () => {
 
 function render(config) {
   enabledToggle.checked = config.enabled;
-  statusText.textContent = config.enabled ? "PAC proxy control active" : "Proxy control disabled";
+  statusText.textContent = config.enabled ? "PAC 代理控制已启用" : "代理控制已停用";
 
   proxySelect.innerHTML = "";
   for (const proxy of config.proxies) {
