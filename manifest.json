@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Chrome AutoProxy",
+  "description": "Proxy controller with profiles, black/white rules, and local GeoIP-assisted routing.",
+  "version": "0.1.0",
+  "minimum_chrome_version": "114",
+  "permissions": [
+    "proxy",
+    "storage",
+    "alarms",
+    "webRequest"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "src/background/service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Chrome AutoProxy",
+    "default_popup": "src/popup/popup.html"
+  },
+  "options_page": "src/options/options.html",
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "data/geoip-seed.json"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

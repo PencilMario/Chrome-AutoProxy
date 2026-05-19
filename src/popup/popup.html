@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chrome AutoProxy</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="popup">
+      <header>
+        <div>
+          <h1>AutoProxy</h1>
+          <p id="statusText">Loading</p>
+        </div>
+        <label class="switch">
+          <input id="enabledToggle" type="checkbox" aria-label="Enable proxy">
+          <span></span>
+        </label>
+      </header>
+
+      <section class="field">
+        <label for="proxySelect">Proxy profile</label>
+        <select id="proxySelect"></select>
+      </section>
+
+      <section class="summary">
+        <div>
+          <strong id="proxyCount">0</strong>
+          <span>profiles</span>
+        </div>
+        <div>
+          <strong id="ruleCount">0</strong>
+          <span>rules</span>
+        </div>
+      </section>
+
+      <button id="openOptions" type="button">Open settings</button>
+    </main>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

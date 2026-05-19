@@ -1,0 +1,11 @@
+{
+  "name": "chrome-autoproxy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "verify": "node --test && node tools/verify-extension.js"
+  },
+  "devDependencies": {}
+}

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chrome AutoProxy 设置</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <div class="ambient-grid" aria-hidden="true"></div>
+    <main class="shell">
+      <header class="page-header">
+        <div class="header-copy">
+          <p class="eyebrow">本地代理控制台</p>
+          <h1>Chrome AutoProxy</h1>
+          <p>集中管理代理档案、直连规则、代理规则与 GeoIP 路由策略。</p>
+        </div>
+        <button id="saveButton" class="primary-action" type="button">保存配置</button>
+      </header>
+
+      <section class="control-card profile-card">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">档案</p>
+            <h2>代理档案</h2>
+          </div>
+          <button id="addProxy" class="secondary-action" type="button">新增档案</button>
+        </div>
+        <div id="proxyList" class="stack"></div>
+      </section>
+
+      <section class="grid">
+        <div class="control-card">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">直连</p>
+              <h2>直连白名单</h2>
+            </div>
+            <button id="restoreDirectDefaults" class="ghost-action" type="button">恢复默认</button>
+          </div>
+          <textarea id="directRules" spellcheck="false" aria-label="直连白名单规则"></textarea>
+        </div>
+        <div class="control-card">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">代理</p>
+              <h2>代理规则</h2>
+            </div>
+          </div>
+          <textarea id="proxyRules" spellcheck="false" aria-label="代理规则"></textarea>
+        </div>
+      </section>
+
+      <section class="control-card geo-card">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">地理库</p>
+            <h2>地理位置路由</h2>
+          </div>
+        </div>
+        <div class="geo-grid">
+          <div class="row">
+            <label for="localCountries">本地区域代码</label>
+            <input id="localCountries" type="text" placeholder="CN, HK">
+          </div>
+          <div class="row">
+            <label for="geoipImport">导入主机国家 JSON</label>
+            <label class="file-control" for="geoipImport">
+              <span>选择 JSON 文件</span>
+              <input id="geoipImport" type="file" accept="application/json">
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section class="control-card debug-card">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">诊断</p>
+            <h2>调试日志</h2>
+          </div>
+          <div class="debug-actions">
+            <label class="switch-control">
+              <input id="debugEnabled" type="checkbox">
+              <span>Debug</span>
+            </label>
+            <button id="pingDebug" class="secondary-action" type="button">测试日志</button>
+            <button id="refreshDebugLogs" class="ghost-action" type="button">刷新</button>
+            <button id="clearDebugLogs" class="ghost-action" type="button">清空</button>
+          </div>
+        </div>
+        <textarea id="debugLogOutput" spellcheck="false" readonly aria-label="调试日志输出"></textarea>
+      </section>
+
+      <p id="message" role="status"></p>
+    </main>
+    <template id="proxyTemplate">
+      <article class="proxy-row">
+        <input data-field="name" placeholder="档案名称" aria-label="代理档案名称">
+        <select data-field="type" aria-label="代理类型">
+          <option>HTTP</option>
+          <option>HTTPS</option>
+          <option>SOCKS4</option>
+          <option>SOCKS5</option>
+        </select>
+        <input data-field="host" placeholder="主机地址" aria-label="代理主机地址">
+        <input data-field="port" type="number" min="1" max="65535" placeholder="端口" aria-label="代理端口">
+        <button data-action="remove" type="button">移除</button>
+      </article>
+    </template>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>
