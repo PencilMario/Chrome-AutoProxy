@@ -16,8 +16,8 @@
 body {
   margin: 0;
   width: 348px;
-  min-height: 414px;
-  overflow: hidden;
+  min-height: 560px;
+  overflow: auto;
   background:
     radial-gradient(circle at 18% -12%, rgba(95, 255, 215, 0.24), transparent 36%),
     radial-gradient(circle at 92% 18%, rgba(186, 255, 106, 0.18), transparent 30%),
@@ -209,6 +209,8 @@ button:focus-visible {
 }
 
 .status-panel,
+.site-panel,
+.speed-panel,
 .field,
 .metric {
   border: 1px solid var(--line);
@@ -222,11 +224,131 @@ button:focus-visible {
   padding: 14px;
 }
 
-.status-panel p {
+.status-panel p,
+.route-display strong,
+.speed-panel strong {
   color: var(--ink);
   font-size: 14px;
   font-weight: 700;
   line-height: 1.35;
+}
+
+.site-panel,
+.speed-panel {
+  display: grid;
+  gap: 11px;
+  padding: 14px;
+  background:
+    linear-gradient(135deg, rgba(95, 255, 215, 0.08), transparent),
+    var(--panel);
+}
+
+.panel-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+#currentHost,
+#speedHint,
+.route-display span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-display {
+  display: grid;
+  gap: 5px;
+}
+
+.route-display strong,
+.speed-panel strong {
+  font-family: "Cascadia Code", "Consolas", monospace;
+  font-size: 20px;
+}
+
+.rule-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.compact-action {
+  min-height: 38px;
+  justify-content: center;
+  padding: 0 10px;
+  text-transform: none;
+}
+
+.mini-action {
+  min-height: 30px;
+  justify-content: center;
+  padding: 0 9px;
+  border-color: rgba(95, 255, 215, 0.24);
+  color: var(--mint);
+  background: rgba(95, 255, 215, 0.07);
+  font-size: 11px;
+  text-transform: none;
+}
+
+.sample-list {
+  display: grid;
+  gap: 8px;
+  max-height: 260px;
+  overflow: auto;
+  padding-top: 2px;
+}
+
+.sample-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 9px;
+  border: 1px solid rgba(171, 255, 222, 0.12);
+  background: rgba(2, 8, 7, 0.32);
+}
+
+.sample-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sample-copy strong,
+.sample-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sample-copy strong {
+  font-size: 12px;
+}
+
+.sample-copy span,
+.sample-empty {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.sample-actions {
+  display: grid;
+  grid-template-columns: 44px 44px;
+  gap: 5px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.46;
+  transform: none;
 }
 
 .field {

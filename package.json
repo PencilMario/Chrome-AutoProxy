@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
+    "update:geoip": "node tools/update-geoip-seed.js",
     "verify": "node --test && node tools/verify-extension.js"
   },
   "devDependencies": {}

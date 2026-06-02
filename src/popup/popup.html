@@ -29,6 +29,31 @@
         <p id="statusText">正在加载</p>
       </section>
 
+      <section class="site-panel" aria-live="polite">
+        <div class="panel-row">
+          <span class="panel-label">当前网站</span>
+          <strong id="currentHost">正在加载</strong>
+        </div>
+        <div class="route-display">
+          <strong id="routeLabel">正在判断</strong>
+          <span id="routeDetail">-</span>
+        </div>
+        <div class="rule-actions">
+          <button id="addDirectRule" class="compact-action" type="button">加入直连</button>
+          <button id="addProxyRule" class="compact-action" type="button">加入强制代理</button>
+        </div>
+      </section>
+
+      <section class="speed-panel">
+        <div class="panel-row">
+          <span class="panel-label">当前网络速度</span>
+          <button id="toggleSamples" class="mini-action" type="button" aria-expanded="false">查看样本</button>
+        </div>
+        <strong id="networkSpeed">暂无数据</strong>
+        <span id="speedHint">仅统计代理请求</span>
+        <div id="sampleList" class="sample-list" hidden></div>
+      </section>
+
       <section class="field">
         <div class="field-label">
           <label for="proxySelect">代理配置</label>

@@ -51,6 +51,22 @@ export class GeoIpCache {
     await this.store.bulkSet(normalized);
   }
 
+  async replaceChinaCidrRecords(records) {
+    const normalized = Object.fromEntries(
+      Object.entries(normalizeRecords(records))
+        .filter(([host, country]) => isIpv4Cidr(host) && country === "CN")
+    );
+    const existing = await this.store.exportAll();
+    const obsoleteKeys = Object.entries(existing)
+      .filter(([host, country]) => isIpv4Cidr(host) && normalizeCountry(country) === "CN")
+      .map(([host]) => host);
+
+    if (obsoleteKeys.length && this.store.deleteMany) {
+      await this.store.deleteMany(obsoleteKeys);
+    }
+    await this.store.bulkSet(normalized);
+  }
+
   async exportRecords() {
     return this.store.exportAll();
   }
@@ -71,6 +87,11 @@ export function createMemoryGeoIpStore(seed = {}) {
     async bulkSet(nextRecords) {
       for (const [host, country] of Object.entries(normalizeRecords(nextRecords))) {
         records.set(host, country);
+      }
+    },
+    async deleteMany(hosts) {
+      for (const host of hosts) {
+        records.delete(normalizeGeoIpHost(host));
       }
     },
     async exportAll() {
@@ -103,6 +124,15 @@ export function createIndexedDbGeoIpStore(options = {}) {
       const store = tx.objectStore(storeName);
       for (const [host, country] of Object.entries(normalizeRecords(records))) {
         store.put(country, host);
+      }
+      await transactionDone(tx);
+    },
+    async deleteMany(hosts) {
+      const db = await openDb(dbName, storeName);
+      const tx = db.transaction(storeName, "readwrite");
+      const store = tx.objectStore(storeName);
+      for (const host of hosts) {
+        store.delete(normalizeGeoIpHost(host));
       }
       await transactionDone(tx);
     },
@@ -140,6 +170,12 @@ function isIpv4(value) {
     const number = Number(part);
     return /^\d+$/.test(part) && number >= 0 && number <= 255;
   });
+}
+
+function isIpv4Cidr(value) {
+  const [range, prefixText] = String(value || "").split("/");
+  const prefix = Number(prefixText);
+  return isIpv4(range) && Number.isInteger(prefix) && prefix >= 0 && prefix <= 32;
 }
 
 function isNonPublicIpv4(ip) {

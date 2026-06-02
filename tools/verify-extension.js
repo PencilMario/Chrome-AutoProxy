@@ -12,6 +12,8 @@ assert.equal(manifest.manifest_version, 3, "manifest must use MV3");
 assert.equal(manifest.background.type, "module", "background worker must be an ES module");
 assert.ok(manifest.permissions.includes("proxy"), "proxy permission is required");
 assert.ok(manifest.permissions.includes("storage"), "storage permission is required");
+assert.ok(manifest.permissions.includes("webRequestAuthProvider"), "proxy auth provider permission is required");
+assert.ok(manifest.permissions.includes("tabs"), "tabs permission is required for current tab URL routing");
 
 await assertFile(manifest.background.service_worker);
 await assertFile(manifest.action.default_popup);
@@ -35,7 +37,13 @@ await verifyModuleSyntax("src/shared/proxy-engine.js");
 await verifyModuleSyntax("src/shared/geoip-cache.js");
 await verifyModuleSyntax("src/shared/default-config.js");
 await verifyModuleSyntax("src/shared/debug-logger.js");
+await verifyModuleSyntax("src/shared/proxy-auth.js");
+await verifyModuleSyntax("src/shared/popup-state.js");
+await verifyModuleSyntax("src/shared/proxy-test.js");
+await verifyModuleSyntax("src/shared/geoip-cn-source.js");
 await verifyScriptSyntax("src/options/options.js");
+await verifyScriptSyntax("src/popup/popup.js");
+await verifyScriptSyntax("tools/update-geoip-seed.js");
 
 console.log("Extension verification passed");
 

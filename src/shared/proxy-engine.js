@@ -100,6 +100,12 @@ export function decideProxyRoute(config) {
         proxy: selectProxy(config?.proxies, config?.activeProxyId)
       };
     }
+
+    return {
+      action: "proxy",
+      reason: "geoip-unknown",
+      proxy: selectProxy(config?.proxies, config?.activeProxyId)
+    };
   }
 
   return { action: "direct", reason: "default-direct" };

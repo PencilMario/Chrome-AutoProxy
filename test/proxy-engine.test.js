@@ -88,6 +88,21 @@ describe("proxy route decisions", () => {
     assert.equal(route.proxy.id, "hk");
   });
 
+  it("uses the default proxy for unknown public hosts in GeoIP proxy mode", () => {
+    const route = decideProxyRoute({
+      enabled: true,
+      host: "unknown.example",
+      rules: { direct: [], proxy: [] },
+      proxies,
+      activeProxyId: "hk",
+      geoip: { mode: "proxyNonLocal", localCountries: ["CN"], hostCountries: {} }
+    });
+
+    assert.equal(route.action, "proxy");
+    assert.equal(route.reason, "geoip-unknown");
+    assert.equal(route.proxy.id, "hk");
+  });
+
   it("uses DIRECT for local GeoIP countries and private IPs", () => {
     assert.equal(
       decideProxyRoute({

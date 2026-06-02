@@ -84,4 +84,23 @@ describe("GeoIP cache", () => {
     assert.equal(await cache.learnHostCountryFromIp("127.0.0.1", "127.0.0.1"), null);
     assert.equal(exportCount, 0);
   });
+
+  it("replaces China CIDR records without removing learned host records", async () => {
+    const store = createMemoryGeoIpStore({
+      "1.0.1.0/24": "CN",
+      "example.cn": "CN",
+      "global.example": "US"
+    });
+    const cache = new GeoIpCache(store);
+
+    await cache.replaceChinaCidrRecords({
+      "1.0.2.0/23": "CN"
+    });
+
+    assert.deepEqual(await cache.exportRecords(), {
+      "1.0.2.0/23": "CN",
+      "example.cn": "CN",
+      "global.example": "US"
+    });
+  });
 });

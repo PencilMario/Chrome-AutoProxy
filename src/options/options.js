@@ -4,8 +4,23 @@ const proxyList = document.querySelector("#proxyList");
 const proxyTemplate = document.querySelector("#proxyTemplate");
 const directRules = document.querySelector("#directRules");
 const proxyRules = document.querySelector("#proxyRules");
+const proxyDialog = document.querySelector("#proxyDialog");
+const proxyForm = document.querySelector("#proxyForm");
+const proxyDialogTitle = document.querySelector("#proxyDialogTitle");
+const proxyName = document.querySelector("#proxyName");
+const proxyType = document.querySelector("#proxyType");
+const proxyHost = document.querySelector("#proxyHost");
+const proxyPort = document.querySelector("#proxyPort");
+const proxyAuthType = document.querySelector("#proxyAuthType");
+const proxyUsername = document.querySelector("#proxyUsername");
+const proxyPassword = document.querySelector("#proxyPassword");
+const toggleProxyPassword = document.querySelector("#toggleProxyPassword");
+const proxyTestResult = document.querySelector("#proxyTestResult");
+const testProxy = document.querySelector("#testProxy");
 const localCountries = document.querySelector("#localCountries");
 const geoipImport = document.querySelector("#geoipImport");
+const updateGeoIpCn = document.querySelector("#updateGeoIpCn");
+const geoipCnStatus = document.querySelector("#geoipCnStatus");
 const debugEnabled = document.querySelector("#debugEnabled");
 const pingDebug = document.querySelector("#pingDebug");
 const refreshDebugLogs = document.querySelector("#refreshDebugLogs");
@@ -17,6 +32,7 @@ const restoreDirectDefaults = document.querySelector("#restoreDirectDefaults");
 const message = document.querySelector("#message");
 
 let config = null;
+let editingProxyId = "";
 
 init();
 
@@ -27,14 +43,46 @@ async function init() {
 }
 
 addProxy.addEventListener("click", () => {
-  config.proxies.push({
-    id: crypto.randomUUID(),
-    name: "新代理",
-    type: "SOCKS5",
-    host: "127.0.0.1",
-    port: 1080
-  });
-  render();
+  openProxyDialog();
+});
+
+proxyAuthType.addEventListener("change", updateAuthFields);
+
+toggleProxyPassword.addEventListener("click", () => {
+  const visible = proxyPassword.type === "password";
+  setPasswordVisibility(visible);
+});
+
+testProxy.addEventListener("click", async () => {
+  testProxy.disabled = true;
+  proxyTestResult.textContent = "正在测试代理连接...";
+  try {
+    const proxy = readProxyDialogFields();
+    const response = await sendMessage({ type: "TEST_PROXY_CONNECTION", proxy });
+    proxyTestResult.textContent = response.result.ok
+      ? `连接正常，耗时 ${response.result.elapsedMs}ms`
+      : `连接失败：${response.result.error}`;
+  } catch (error) {
+    proxyTestResult.textContent = error.message;
+  } finally {
+    testProxy.disabled = false;
+  }
+});
+
+proxyForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  try {
+    saveProxyFromDialog();
+    proxyDialog.close();
+    renderProxyList();
+    showMessage("代理服务器已更新，保存配置后生效。");
+  } catch (error) {
+    showMessage(error.message);
+  }
+});
+
+proxyDialog.querySelectorAll('[data-action="cancel-proxy"]').forEach((button) => {
+  button.addEventListener("click", () => proxyDialog.close());
 });
 
 restoreDirectDefaults.addEventListener("click", () => {
@@ -67,6 +115,26 @@ geoipImport.addEventListener("change", async () => {
   }
 });
 
+updateGeoIpCn.addEventListener("click", async () => {
+  updateGeoIpCn.disabled = true;
+  geoipCnStatus.textContent = "正在更新...";
+  try {
+    const response = await sendMessage({ type: "UPDATE_GEOIP_CN" });
+    config.geoip = {
+      ...(config.geoip || {}),
+      cnLastUpdatedAt: response.updatedAt,
+      cnRecordCount: response.records
+    };
+    renderGeoIpCnStatus();
+    showMessage(`GeoIP2-CN 已更新：${response.records} 条 CN CIDR`);
+  } catch (error) {
+    geoipCnStatus.textContent = "更新失败";
+    showMessage(error.message);
+  } finally {
+    updateGeoIpCn.disabled = false;
+  }
+});
+
 pingDebug.addEventListener("click", async () => {
   try {
     const response = await sendMessage({ type: "PING_DEBUG" });
@@ -95,43 +163,42 @@ clearDebugLogs.addEventListener("click", async () => {
 });
 
 function render() {
+  renderProxyList();
+  directRules.value = stringifyRuleList(config.rules.direct);
+  proxyRules.value = stringifyRuleList(config.rules.proxy);
+  localCountries.value = config.geoip.localCountries.join(", ");
+  renderGeoIpCnStatus();
+  debugEnabled.checked = Boolean(config.debug?.enabled);
+}
+
+function renderProxyList() {
   proxyList.innerHTML = "";
   for (const proxy of config.proxies) {
     proxyList.append(renderProxy(proxy));
   }
-
-  directRules.value = stringifyRuleList(config.rules.direct);
-  proxyRules.value = stringifyRuleList(config.rules.proxy);
-  localCountries.value = config.geoip.localCountries.join(", ");
-  debugEnabled.checked = Boolean(config.debug?.enabled);
 }
 
 function renderProxy(proxy) {
   const row = proxyTemplate.content.firstElementChild.cloneNode(true);
   row.dataset.proxyId = proxy.id;
-  row.querySelector('[data-field="name"]').value = proxy.name;
-  row.querySelector('[data-field="type"]').value = proxy.type;
-  row.querySelector('[data-field="host"]').value = proxy.host;
-  row.querySelector('[data-field="port"]').value = proxy.port;
+  row.querySelector('[data-field="name"]').textContent = proxy.name;
+  row.querySelector('[data-field="endpoint"]').textContent = `${proxy.type} ${proxy.host}:${proxy.port}`;
+  row.querySelector('[data-field="authentication"]').textContent = proxy.authentication?.type === "usernamePassword"
+    ? "用户名/密码"
+    : "无需认证";
+  row.querySelector('[data-action="edit"]').addEventListener("click", () => openProxyDialog(proxy));
   row.querySelector('[data-action="remove"]').addEventListener("click", () => {
     config.proxies = config.proxies.filter((item) => item.id !== proxy.id);
     if (config.activeProxyId === proxy.id) config.activeProxyId = config.proxies[0]?.id || "";
-    render();
+    renderProxyList();
+    showMessage("代理服务器已移除，保存配置后生效。");
   });
   return row;
 }
 
 function readForm() {
-  config.proxies = [...proxyList.querySelectorAll(".proxy-row")].map((row) => ({
-    id: row.dataset.proxyId,
-    name: row.querySelector('[data-field="name"]').value.trim(),
-    type: row.querySelector('[data-field="type"]').value,
-    host: row.querySelector('[data-field="host"]').value.trim(),
-    port: Number(row.querySelector('[data-field="port"]').value)
-  })).filter((proxy) => proxy.name && proxy.host && Number.isInteger(proxy.port));
-
   if (!config.proxies.length) {
-    throw new Error("至少需要保留一个代理档案");
+    throw new Error("至少需要保留一个代理服务器");
   }
 
   if (!config.proxies.some((proxy) => proxy.id === config.activeProxyId)) {
@@ -148,6 +215,88 @@ function readForm() {
     ...(config.debug || {}),
     enabled: debugEnabled.checked
   };
+}
+
+function openProxyDialog(proxy = null) {
+  editingProxyId = proxy?.id || "";
+  proxyDialogTitle.textContent = proxy ? "编辑服务器" : "新增服务器";
+  proxyName.value = proxy?.name || "";
+  proxyType.value = proxy?.type || "SOCKS5";
+  proxyHost.value = proxy?.host || "";
+  proxyPort.value = proxy?.port || "";
+  proxyAuthType.value = proxy?.authentication?.type || "none";
+  proxyUsername.value = proxy?.authentication?.username || "";
+  proxyPassword.value = proxy?.authentication?.password || "";
+  setPasswordVisibility(false);
+  proxyTestResult.textContent = "";
+  updateAuthFields();
+  proxyDialog.showModal();
+  proxyName.focus();
+}
+
+function saveProxyFromDialog() {
+  const proxy = readProxyDialogFields();
+
+  if (editingProxyId) {
+    config.proxies = config.proxies.map((item) => item.id === editingProxyId ? proxy : item);
+  } else {
+    config.proxies.push(proxy);
+    if (!config.activeProxyId) config.activeProxyId = proxy.id;
+  }
+}
+
+function readProxyDialogFields() {
+  const port = Number(proxyPort.value);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error("端口必须在 1 到 65535 之间");
+  }
+
+  const proxy = {
+    id: editingProxyId || crypto.randomUUID(),
+    name: proxyName.value.trim(),
+    type: proxyType.value,
+    host: proxyHost.value.trim(),
+    port,
+    authentication: readAuthenticationFields()
+  };
+
+  if (!proxy.name || !proxy.host) {
+    throw new Error("请填写代理服务器名称和主机地址");
+  }
+
+  return proxy;
+}
+
+function readAuthenticationFields() {
+  if (proxyAuthType.value !== "usernamePassword") {
+    return { type: "none" };
+  }
+
+  const username = proxyUsername.value.trim();
+  if (!username) {
+    throw new Error("用户名/密码认证需要填写用户名");
+  }
+
+  return {
+    type: "usernamePassword",
+    username,
+    password: proxyPassword.value
+  };
+}
+
+function updateAuthFields() {
+  const enabled = proxyAuthType.value === "usernamePassword";
+  for (const field of proxyDialog.querySelectorAll(".auth-field")) {
+    field.hidden = !enabled;
+  }
+  proxyUsername.required = enabled;
+  proxyPassword.required = false;
+}
+
+function setPasswordVisibility(visible) {
+  proxyPassword.type = visible ? "text" : "password";
+  toggleProxyPassword.textContent = visible ? "隐藏" : "显示";
+  toggleProxyPassword.setAttribute("aria-pressed", String(visible));
 }
 
 function parseSimpleRules(value) {
@@ -183,6 +332,17 @@ function renderDebugLogs(response) {
     ? events.map(formatDebugEvent).join("\n")
     : `Debug ${response.debugEnabled ? "已开启" : "未开启"}，暂无日志。`;
   debugLogOutput.scrollTop = debugLogOutput.scrollHeight;
+}
+
+function renderGeoIpCnStatus() {
+  const count = Number(config.geoip?.cnRecordCount || 0);
+  const updatedAt = config.geoip?.cnLastUpdatedAt;
+  if (!updatedAt) {
+    geoipCnStatus.textContent = "尚未更新";
+    return;
+  }
+
+  geoipCnStatus.textContent = `${count} 条，${new Date(updatedAt).toLocaleString()}`;
 }
 
 function formatDebugEvent(entry) {

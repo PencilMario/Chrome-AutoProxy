@@ -10,7 +10,7 @@ Chrome AutoProxy is a Manifest V3 proxy controller extension. It uses a generate
 - Per-rule proxy profile selection with `pattern => proxyId` syntax.
 - PAC-based proxy takeover through `chrome.proxy.settings`.
 - Local GeoIP cache backed by IndexedDB.
-- Packaged seed GeoIP records plus JSON import from the options page.
+- Dynamic China CIDR updates from Hackl0us GeoIP2-CN plus JSON import from the options page.
 - Built-in `DIRECT` handling for local/private networks and common browser security software helper hosts.
 - Optional debug logging from the options page for diagnosing slow or hanging requests.
 
@@ -42,6 +42,15 @@ Some antivirus and browser security products inject helper scripts or make reput
 - `siteadvisor.com`
 - `*.siteadvisor.com`
 - `*.trustedsource.org`
+
+## GeoIP2-CN Routing
+
+GeoIP-assisted routing uses the `CN-ip-cidr.txt` feed from [Hackl0us/GeoIP2-CN](https://github.com/Hackl0us/GeoIP2-CN). That project is a China mainland IP range database, not a full country lookup database. Chrome AutoProxy stores those ranges as `CIDR: "CN"` records:
+
+- A resolved IP that matches the CN CIDR list is treated as local and routed `DIRECT`.
+- A public host that does not match the CN CIDR list remains unknown and follows the GeoIP mode fallback, which is proxy by default.
+- The background service worker refreshes the CN CIDR list daily. The options page also has an `立即更新` button for manual refresh.
+- Packaged seed data can be regenerated with `npm run update:geoip`.
 
 ## Debugging Slow Requests
 

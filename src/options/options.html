@@ -13,18 +13,17 @@
         <div class="header-copy">
           <p class="eyebrow">本地代理控制台</p>
           <h1>Chrome AutoProxy</h1>
-          <p>集中管理代理档案、直连规则、代理规则与 GeoIP 路由策略。</p>
+          <p>集中管理代理服务器、直连规则、强制代理与 GeoIP 路由策略。</p>
         </div>
-        <button id="saveButton" class="primary-action" type="button">保存配置</button>
       </header>
 
       <section class="control-card profile-card">
         <div class="section-heading">
           <div>
             <p class="section-kicker">档案</p>
-            <h2>代理档案</h2>
+            <h2>代理服务器</h2>
           </div>
-          <button id="addProxy" class="secondary-action" type="button">新增档案</button>
+          <button id="addProxy" class="secondary-action" type="button">新增服务器</button>
         </div>
         <div id="proxyList" class="stack"></div>
       </section>
@@ -44,10 +43,10 @@
           <div class="section-heading">
             <div>
               <p class="section-kicker">代理</p>
-              <h2>代理规则</h2>
+              <h2>强制代理</h2>
             </div>
           </div>
-          <textarea id="proxyRules" spellcheck="false" aria-label="代理规则"></textarea>
+          <textarea id="proxyRules" spellcheck="false" aria-label="强制代理"></textarea>
         </div>
       </section>
 
@@ -64,6 +63,13 @@
             <input id="localCountries" type="text" placeholder="CN, HK">
           </div>
           <div class="row">
+            <span>GeoIP2-CN 动态库</span>
+            <div class="geoip-update-row">
+              <button id="updateGeoIpCn" class="secondary-action" type="button">立即更新</button>
+              <span id="geoipCnStatus">尚未更新</span>
+            </div>
+          </div>
+          <div class="row">
             <label for="geoipImport">导入主机国家 JSON</label>
             <label class="file-control" for="geoipImport">
               <span>选择 JSON 文件</span>
@@ -71,6 +77,7 @@
             </label>
           </div>
         </div>
+        <p class="hint">GeoIP2-CN 仅包含中国大陆 IPv4 CIDR。命中 CN 时按本地区域直连，未命中不会被识别为其他国家，会按未知地区处理。</p>
       </section>
 
       <section class="control-card debug-card">
@@ -92,19 +99,77 @@
         <textarea id="debugLogOutput" spellcheck="false" readonly aria-label="调试日志输出"></textarea>
       </section>
 
-      <p id="message" role="status"></p>
+      <footer class="save-footer">
+        <p id="message" role="status"></p>
+        <button id="saveButton" class="primary-action" type="button">保存配置</button>
+      </footer>
     </main>
+    <dialog id="proxyDialog" class="proxy-dialog">
+      <form id="proxyForm" method="dialog">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">代理服务器</p>
+            <h2 id="proxyDialogTitle">新增服务器</h2>
+          </div>
+          <button class="icon-action" data-action="cancel-proxy" type="button" aria-label="关闭">×</button>
+        </div>
+        <div class="dialog-grid">
+          <label class="row">
+            <span>名称</span>
+            <input id="proxyName" required autocomplete="off">
+          </label>
+          <label class="row">
+            <span>类型</span>
+            <select id="proxyType">
+              <option>HTTP</option>
+              <option>HTTPS</option>
+              <option>SOCKS4</option>
+              <option>SOCKS5</option>
+            </select>
+          </label>
+          <label class="row">
+            <span>主机地址</span>
+            <input id="proxyHost" required autocomplete="off">
+          </label>
+          <label class="row">
+            <span>端口</span>
+            <input id="proxyPort" type="number" min="1" max="65535" required>
+          </label>
+          <label class="row">
+            <span>认证方式</span>
+            <select id="proxyAuthType">
+              <option value="none">无需认证</option>
+              <option value="usernamePassword">用户名/密码</option>
+            </select>
+          </label>
+          <label class="row auth-field">
+            <span>用户名</span>
+            <input id="proxyUsername" autocomplete="username">
+          </label>
+          <label class="row auth-field">
+            <span>密码</span>
+            <span class="password-control">
+              <input id="proxyPassword" type="password" autocomplete="current-password">
+              <button id="toggleProxyPassword" class="inline-action" type="button" aria-pressed="false">显示</button>
+            </span>
+          </label>
+        </div>
+        <p id="proxyTestResult" class="test-result" role="status"></p>
+        <div class="dialog-actions">
+          <button class="secondary-action" id="testProxy" type="button">测试连接</button>
+          <button class="ghost-action" data-action="cancel-proxy" type="button">取消</button>
+          <button class="primary-action" type="submit">保存服务器</button>
+        </div>
+      </form>
+    </dialog>
     <template id="proxyTemplate">
       <article class="proxy-row">
-        <input data-field="name" placeholder="档案名称" aria-label="代理档案名称">
-        <select data-field="type" aria-label="代理类型">
-          <option>HTTP</option>
-          <option>HTTPS</option>
-          <option>SOCKS4</option>
-          <option>SOCKS5</option>
-        </select>
-        <input data-field="host" placeholder="主机地址" aria-label="代理主机地址">
-        <input data-field="port" type="number" min="1" max="65535" placeholder="端口" aria-label="代理端口">
+        <div class="proxy-summary">
+          <strong data-field="name"></strong>
+          <span data-field="endpoint"></span>
+        </div>
+        <span class="auth-badge" data-field="authentication"></span>
+        <button data-action="edit" type="button">编辑</button>
         <button data-action="remove" type="button">移除</button>
       </article>
     </template>

@@ -82,7 +82,9 @@ export const DEFAULT_CONFIG = {
     localCountries: [
       "CN"
     ],
-    cacheSeedImported: false
+    cacheSeedImported: false,
+    cnLastUpdatedAt: "",
+    cnRecordCount: 0
   },
   debug: {
     enabled: false
@@ -93,7 +95,7 @@ export function mergeConfig(config = {}) {
   return {
     ...DEFAULT_CONFIG,
     ...config,
-    proxies: Array.isArray(config.proxies) && config.proxies.length ? config.proxies : DEFAULT_CONFIG.proxies,
+    proxies: normalizeProxies(config.proxies),
     rules: {
       ...DEFAULT_CONFIG.rules,
       ...(config.rules || {})
@@ -106,5 +108,32 @@ export function mergeConfig(config = {}) {
       ...DEFAULT_CONFIG.debug,
       ...(config.debug || {})
     }
+  };
+}
+
+function normalizeProxies(proxies) {
+  const list = Array.isArray(proxies) && proxies.length ? proxies : DEFAULT_CONFIG.proxies;
+  return list
+    .map((proxy) => ({
+      ...proxy,
+      id: String(proxy?.id || "").trim(),
+      name: String(proxy?.name || "").trim(),
+      type: String(proxy?.type || "HTTP").trim().toUpperCase(),
+      host: String(proxy?.host || "").trim(),
+      port: Number(proxy?.port),
+      authentication: normalizeProxyAuthentication(proxy?.authentication)
+    }))
+    .filter((proxy) => proxy.id && proxy.name && proxy.host && Number.isInteger(proxy.port));
+}
+
+function normalizeProxyAuthentication(authentication = {}) {
+  if (authentication?.type !== "usernamePassword") {
+    return { type: "none" };
+  }
+
+  return {
+    type: "usernamePassword",
+    username: String(authentication.username || ""),
+    password: String(authentication.password || "")
   };
 }
